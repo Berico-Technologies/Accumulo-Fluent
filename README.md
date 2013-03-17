@@ -3,6 +3,14 @@
 
 A fluent alternative to the Apache Accumulo 1.4.2 client.
 
+The underlying interface is called **Cirrus**.  Cirrus is the highest type of cloud that forms in the sky,
+a fitting name for a high-level abstraction to the "Accumulo API".
+
+* Author:  Richard Clayton (Berico Technologies)
+* License:  Apache 2.0
+
+> A special thanks to Keith Turner (https://github.com/keith-turner); his "Typo" project is used to Serialize/Deserialize Java primitives/objects in Fluent-Accumulo.
+
 ### Example
 
 #### Old way (From Accumulo example)
