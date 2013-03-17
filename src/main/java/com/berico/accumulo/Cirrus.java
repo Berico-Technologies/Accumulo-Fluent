@@ -13,6 +13,9 @@ import org.apache.accumulo.core.client.ZooKeeperInstance;
 /**
  * Cirrus - A Fluent API for Apache Accumulo.
  * 
+ * Why Cirrus?  Cirrus is the highest type of cloud that forms in the sky,
+ * a fitting name for a high-level abstraction to the "Accumulo API".
+ * 
  * @author Richard Clayton (Berico Technologies)
  */
 public class Cirrus {
@@ -120,9 +123,6 @@ public class Cirrus {
 		
 		return new MutationOps(table, this);
 	}
-	
-	/* ############## Assertions ######################################################################### */
-	
 	
 	/* ############## Helpers ############################################################################ */
 	

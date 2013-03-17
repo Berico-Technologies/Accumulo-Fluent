@@ -10,8 +10,11 @@ import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Mutation;
 
+import com.berico.accumulo.ValueOps.CompletionHandler;
+
 /**
  * A collection of fluent Mutation Operations for a table.
+ * 
  * @author Richard Clayton (Berico Technologies)
  */
 public class MutationOps extends TableFluentExtension {
@@ -57,24 +60,71 @@ public class MutationOps extends TableFluentExtension {
 		registerShutdownHook();
 	}
 
+	/**
+	 * Perform multiple operations on the same row, queuing the mutations until the done() function
+	 * is called.
+	 * @param rowKey ID of the Row being operated on.
+	 * @return A set of Row related operations.
+	 */
 	public RowMultiOps withRow(String rowKey){
 		
 		return new RowMultiOps(rowKey, this);
 	}
 	
-	public MutationOps put(String rowKey, String columnFamily, String columnQualifier, String value) throws MutationsRejectedException{
+	/**
+	 * Perform an atomic creation/insertion mutation.
+	 * @param rowKey Row Key.
+	 * @param columnFamily Column Family
+	 * @param columnQualifer Column Qualifier
+	 * @return Fluent interface to set the value and timestamp.
+	 */
+	public ValueOps<MutationOps> put(String rowKey, String columnFamily, String columnQualifer){
+		
+		return put(rowKey, new ColumnIdentifiers(columnFamily, columnQualifer));
+	}
+	
+	/**
+	 * Perform an atomic creation/insertion mutation.
+	 * @param rowKey Row Key.
+	 * @param columnFamily Column Family
+	 * @param columnQualifer Column Qualifier
+	 * @param visibilityExpression Column Visibility Expression
+	 * @return Fluent interface to set the value and timestamp.
+	 */
+	public ValueOps<MutationOps> put(String rowKey, String columnFamily, String columnQualifer, String visibilityExpression){
+		
+		return put(rowKey, new ColumnIdentifiers(columnFamily, columnQualifer, visibilityExpression));
+	}
+	
+	/**
+	 * Perform an atomic creation/insertion mutation.
+	 * @param rowKey Row Key.
+	 * @param columnExpression Column Expression.
+	 * @return Fluent interface to set the value and timestamp.
+	 */
+	public ValueOps<MutationOps> put(String rowKey, String columnExpression){
+		
+		return put(rowKey, new ColumnIdentifiers(columnExpression));
+	}
+	
+	/**
+	 * Forms the mutation and completion handler and passes control to the ValueOps fluent interface.
+	 * @param rowKey Row Key
+	 * @param columnIdentifiers Column Identifiers
+	 * @return Fluent interface for setting the value and timestamp.
+	 */
+	ValueOps<MutationOps> put(String rowKey, ColumnIdentifiers columnIdentifiers) {
 		
 		Mutation mutation = new Mutation(rowKey);
 		
-		mutation.put(columnFamily, columnQualifier, value);
-		
-		writer.addMutation(mutation);
-		
-		return this;
+		return new ValueOps<MutationOps>(columnIdentifiers, mutation, this, new CompletionHandler(){
+			@Override
+			public void complete(Mutation mutation)  throws MutationsRejectedException {
+				
+				writer.addMutation(mutation);
+			}
+		});
 	}
-	
-	
-	
 	
 	/**
 	 * Set the bytes to store before sending a batch.

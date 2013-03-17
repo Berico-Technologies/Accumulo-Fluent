@@ -12,30 +12,52 @@ import org.apache.accumulo.core.client.TableNotFoundException;
 public class App 
 {	
     public static void main( String[] args ) 
-    		throws AccumuloException, AccumuloSecurityException, TableNotFoundException, TableExistsException
+    	throws AccumuloException, AccumuloSecurityException, 
+    		   TableNotFoundException, TableExistsException
     {
-    	
-    	
         p("Hello Accumulo!");
         
         Cirrus cirrus = new Cirrus("titan-test", "root", "password");
         
-        cirrus.table("cirrus").delete();
+        cirrus.table("us_cities").delete();
+        
+        long timestamp = 12345678l;
         
         cirrus
-        	.table("cirrus")
+        	.table("us_cities")
         	.mutate()
-        	.withRow("usa.va.manassas")
-        		.column("meta", "commonname").value("Manassas")
-        		.column("meta", "last update").value(new Date())
-        		.column("meta", "city.id").value(UUID.randomUUID())
-        		.column("meta", "population.ants").value(new BigInteger("12345678901234567890"))
-        		.column("meta", "zipcode", "SECRET").value(20110)
-        		.column("meta:areacode:SECRET").value(703, 12345678)
-        		.column("meta:latitude:SECRET").value(38.7514)
-        		.column("meta:longitude:SECRET").value(77.4764)
-        		.column("meta:state").value("Virginia")
-        	.done();
+        		// Add a single row by specifying Row ID, Column Family,
+        		// Column Qualifier, Value and Timestamps
+	        	.put("usa.va.reston", "meta", "commonname", "SECRET").value("Reston", timestamp)
+	        	// But you can also use Column Expressions to avoid writing separate strings
+	        	// (and obviously the timestamp is optional).
+	        	.put("usa.va.fairfax", "meta:commonname:SECRET").value("Fairfax")
+	        	// Or you can operate on a single row, adding a number of cells
+	        	.withRow("usa.va.manassas")
+	        		// Strings!
+	        		.column("meta", "commonname").value("Manassas")
+	        		// Ints
+	        		.column("meta", "zipcode", "SECRET").value(20110)
+	        		// Doubles!
+	        		.column("meta", "latitude", "SECRET").value(38.7514)
+	        		.column("meta", "longitude", "SECRET").value(77.4764)
+	        		// Dates!
+	        		.column("meta", "last update").value(new Date())
+	        		// UUIDs!
+	        		.column("meta", "city.id").value(UUID.randomUUID())
+	        		// BigInts!
+	        		.column("meta", "population.ants").value(new BigInteger("12345678901234567890"))
+	        		// And you can add a timestamp with values.
+	        		.column("meta", "areacode", "SECRET").value(703, timestamp)
+	        		// And take advantage of column expressions.
+	        		.column("meta:state").value("Virginia")
+	        		// And you can delete cells.
+	        		.delete("meta", "some-cell")
+	        		// As well as use Column Expressions on Deletes
+	        		.delete("meta:some-other-cell")
+	        		// All mutations are queued, executed only when done() is called.
+	        		.done();
+        	
         
         p("Done!");
     }

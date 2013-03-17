@@ -4,6 +4,8 @@ import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.security.ColumnVisibility;
 
+import com.berico.accumulo.ValueOps.CompletionHandler;
+
 /**
  * A fluent interface for executing multiple mutations on the same row.
  * 
@@ -49,11 +51,11 @@ public class RowMultiOps {
 	 * @param qualifier Column Qualifier.
 	 * @return ValueOps interface.
 	 */
-	public ValueOps column(String family, String qualifier){
+	public ValueOps<RowMultiOps> column(String family, String qualifier) throws MutationsRejectedException {
 		
 		ColumnIdentifiers columnIdentifiers = new ColumnIdentifiers(family, qualifier);
 		
-		return new ValueOps(columnIdentifiers, this);
+		return new ValueOps<RowMultiOps>(columnIdentifiers, this.mutation, this, new NoOpCompletionHandler());
 	}
 	
 	/**
@@ -63,11 +65,11 @@ public class RowMultiOps {
 	 * @param visibility Column visibility expression.
 	 * @return ValueOps interface.
 	 */
-	public ValueOps column(String family, String qualifier, String visibility){
+	public ValueOps<RowMultiOps> column(String family, String qualifier, String visibility)  throws MutationsRejectedException {
 		
 		ColumnIdentifiers columnIdentifiers = new ColumnIdentifiers(family, qualifier, visibility);
 		
-		return new ValueOps(columnIdentifiers, this);
+		return new ValueOps<RowMultiOps>(columnIdentifiers, this.mutation, this, new NoOpCompletionHandler());
 	}
 	
 	/**
@@ -75,12 +77,25 @@ public class RowMultiOps {
 	 * @param columnExpression Condensed expression for representing column family, qualifier and visibility.
 	 * @return ValueOps interface.
 	 */
-	public ValueOps column(String columnExpression){
+	public ValueOps<RowMultiOps> column(String columnExpression) throws MutationsRejectedException {
 		
 		ColumnIdentifiers columnIdentifiers = new ColumnIdentifiers(columnExpression);
 		
-		return new ValueOps(columnIdentifiers, this);
+		return new ValueOps<RowMultiOps>(columnIdentifiers, this.mutation, this, new NoOpCompletionHandler());
 		
+	}
+	
+	/* ############## CompletionHandler ################################################################ */
+	
+	/**
+	 * Does nothing since the mutation is processed when the fluent interface is done().
+	 * 
+	 * @author Richard Clayton (Berico Technologies)
+	 */
+	public class NoOpCompletionHandler implements CompletionHandler {
+		
+		@Override
+		public void complete(Mutation mutation) throws MutationsRejectedException {}
 	}
 	
 	/* ############## Deletes ########################################################################## */
