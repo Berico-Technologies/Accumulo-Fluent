@@ -7,7 +7,8 @@ The underlying interface is called **Cirrus**.  Cirrus is the highest type of cl
 a fitting name for a high-level abstraction to the "Accumulo API".
 
 * Author:  Richard Clayton (Berico Technologies)
-* License:  Apache 2.0
+* License: Apache 2.0
+* Status:  In-Development (not even an Alpha product)
 
 > A special thanks to Keith Turner (https://github.com/keith-turner); his "Typo" project is used to Serialize/Deserialize Java primitives/objects in Fluent-Accumulo.
 
@@ -100,4 +101,26 @@ cirrus
       // All mutations are queued, executed only when done() is called.
       .done();
 ```
+### Using Accumulo-Fluent via Maven
 
+Reference the Berico Technologies Nexus Repository:
+
+```xml
+<repository>
+  <id>nexus.bericotechnologies.com</id>
+  <name>Berico Technologies Nexus</name>
+  <url>http://nexus.bericotechnologies.com/content/groups/public</url>
+  <releases><enabled>true</enabled></releases>
+  <snapshots><enabled>true</enabled></snapshots>
+</repository>
+```
+
+And you can refer to the dependency as:
+
+```xml
+<dependency>
+  <groupId>org.apache.accumulo</groupId>
+  <artifactId>accumulo-fluent</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
+</dependency>
+```
