@@ -37,8 +37,11 @@ writer.close();
 ```
 
 #### The new "Fluent" way
+
+Functionally equivalent to the example above.
+
 ```java
-new Cirrus("myinstance", "user", "passwd")
+new Cirrus("myinstance", "user", "passwd", "zooserver-one", "zooserver-two")
     .table("table")
        .mutate()
          .put("row1", "myColFam:myColQual:public").value("myValue");
