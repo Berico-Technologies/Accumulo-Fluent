@@ -1,5 +1,9 @@
 package com.berico.accumulo;
 
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.UUID;
+
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.TableExistsException;
@@ -22,10 +26,15 @@ public class App
         	.table("cirrus")
         	.mutate()
         	.withRow("usa.va.manassas")
-        	.put("meta:zipcode:public", 20110)
-        	.put("meta:areacode:public", 703)
-        	.put("meta:latitude:public", 38.7514)
-        	.put("meta:longitude:public", 77.4764)
+        		.column("meta", "commonname").value("Manassas")
+        		.column("meta", "last update").value(new Date())
+        		.column("meta", "city.id").value(UUID.randomUUID())
+        		.column("meta", "population.ants").value(new BigInteger("12345678901234567890"))
+        		.column("meta", "zipcode", "SECRET").value(20110)
+        		.column("meta:areacode:SECRET").value(703, 12345678)
+        		.column("meta:latitude:SECRET").value(38.7514)
+        		.column("meta:longitude:SECRET").value(77.4764)
+        		.column("meta:state").value("Virginia")
         	.done();
         
         p("Done!");
