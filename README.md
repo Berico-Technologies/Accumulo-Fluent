@@ -41,8 +41,10 @@ writer.close();
 new Cirrus("myinstance", "user", "passwd")
     .table("table")
        .mutate()
- .put("row1", "myColFam:myColQual:public").value("myValue");
+         .put("row1", "myColFam:myColQual:public").value("myValue");
 ```
+
+#### More Features
 
 The fluent API supports a number of interesting operations that will help reduce the amount of tedium in working with the Accumulo Client:
 
