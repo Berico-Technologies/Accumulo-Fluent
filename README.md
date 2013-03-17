@@ -119,7 +119,7 @@ And you can refer to the dependency as:
 
 ```xml
 <dependency>
-  <groupId>org.apache.accumulo</groupId>
+  <groupId>com.berico</groupId>
   <artifactId>accumulo-fluent</artifactId>
   <version>1.0.1-SNAPSHOT</version>
 </dependency>
