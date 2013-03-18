@@ -27,4 +27,15 @@ public abstract class FluentExtension {
 		
 		return this.cirrus;
 	}
+	
+	/**
+	 * Return the outer fluent interface.
+	 * No difference between "and" outside of indicating
+	 * the intent of developer.
+	 * @return Outer fluent interface.
+	 */
+	public Cirrus done(){
+		
+		return this.cirrus;
+	}
 }

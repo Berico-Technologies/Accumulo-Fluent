@@ -2,6 +2,7 @@ package com.berico.accumulo;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.accumulo.core.client.AccumuloException;
@@ -9,14 +10,15 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 
+import com.berico.accumulo.CellValueRetrievalOps.ValueHandler;
+
 public class App 
 {	
     public static void main( String[] args ) 
     	throws AccumuloException, AccumuloSecurityException, 
     		   TableNotFoundException, TableExistsException
     {
-        p("Hello Accumulo!");
-        
+    	
         Cirrus cirrus = new Cirrus("titan-test", "root", "password");
         
         cirrus.table("us_cities").delete();
@@ -56,8 +58,45 @@ public class App
 	        		// As well as use Column Expressions on Deletes
 	        		.delete("meta:some-other-cell")
 	        		// All mutations are queued, executed only when done() is called.
-	        		.done();
+	        		.endRow()
+	        .done();
+        
+        int zipcode = cirrus.table("us_cities").scan("SECRET").cell("usa.va.manassas", "meta", "zipcode").asInt();
+        
+        p("Found zipcode: %s", zipcode);
+        
+        final StringBuffer combinedList = new StringBuffer();
+        
+        cirrus.table("us_cities").scan("SECRET")
+        	.cell("usa.va.manassas", "meta:commonname").asString(
+        	  new ValueHandler<String>(){
+				@Override
+				public void handle(String value) {
+					
+					combinedList.append(value).append(",");
+				}
+        	})
+        	.cell("usa.va.reston", "meta:commonname").asString(
+        	  new ValueHandler<String>(){
+				@Override
+				public void handle(String value) {
+					
+					combinedList.append(value).append(",");
+				}
+        	})
+        .done();
+        
+        p("Combined List: %s", combinedList.toString());
+       
+        
+        Iterator<CellValueRetrievalOps> i = cirrus.table("us_cities").scan("SECRET").row("usa.va.manassas").iterator();
+        
+        while(i.hasNext()){
         	
+        	CellValueRetrievalOps cell = i.next();
+        	
+        	p("%s => %s", cell.key().toString(), cell.asString());
+        }
         
         p("Done!");
     }

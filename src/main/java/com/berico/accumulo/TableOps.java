@@ -4,8 +4,10 @@ import java.util.Map.Entry;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.security.Authorizations;
 import org.apache.hadoop.io.Text;
 
 /**
@@ -104,6 +106,13 @@ public class TableOps extends TableFluentExtension {
 	public MutationOps mutate() throws AccumuloException, AccumuloSecurityException, TableExistsException, TableNotFoundException{
 		
 		return new MutationOps(this.tableName, this.cirrus);
+	}
+	
+	public ScanOps scan(String... authorizations) throws TableNotFoundException {
+		
+		Scanner scanner = this.cirrus.connector.createScanner(this.tableName, new Authorizations(authorizations));
+		
+		return new ScanOps(this.cirrus, scanner);
 	}
 	
 	/**

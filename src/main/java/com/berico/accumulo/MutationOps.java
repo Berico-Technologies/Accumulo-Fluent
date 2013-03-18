@@ -9,8 +9,10 @@ import org.apache.accumulo.core.client.MutationsRejectedException;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Mutation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.berico.accumulo.ValueOps.CompletionHandler;
+import com.berico.accumulo.ValueMutationOps.CompletionHandler;
 
 /**
  * A collection of fluent Mutation Operations for a table.
@@ -19,6 +21,8 @@ import com.berico.accumulo.ValueOps.CompletionHandler;
  */
 public class MutationOps extends TableFluentExtension {
 
+	private static final Logger logger = LoggerFactory.getLogger(MutationOps.class);
+	
 	/**
 	 * Bytes to store before sending a batch.
 	 */
@@ -66,9 +70,9 @@ public class MutationOps extends TableFluentExtension {
 	 * @param rowKey ID of the Row being operated on.
 	 * @return A set of Row related operations.
 	 */
-	public RowMultiOps withRow(String rowKey){
+	public RowMutationOps withRow(String rowKey){
 		
-		return new RowMultiOps(rowKey, this);
+		return new RowMutationOps(rowKey, this);
 	}
 	
 	/**
@@ -78,7 +82,7 @@ public class MutationOps extends TableFluentExtension {
 	 * @param columnQualifer Column Qualifier
 	 * @return Fluent interface to set the value and timestamp.
 	 */
-	public ValueOps<MutationOps> put(String rowKey, String columnFamily, String columnQualifer){
+	public ValueMutationOps<MutationOps> put(String rowKey, String columnFamily, String columnQualifer){
 		
 		return put(rowKey, new ColumnIdentifiers(columnFamily, columnQualifer));
 	}
@@ -91,7 +95,7 @@ public class MutationOps extends TableFluentExtension {
 	 * @param visibilityExpression Column Visibility Expression
 	 * @return Fluent interface to set the value and timestamp.
 	 */
-	public ValueOps<MutationOps> put(String rowKey, String columnFamily, String columnQualifer, String visibilityExpression){
+	public ValueMutationOps<MutationOps> put(String rowKey, String columnFamily, String columnQualifer, String visibilityExpression){
 		
 		return put(rowKey, new ColumnIdentifiers(columnFamily, columnQualifer, visibilityExpression));
 	}
@@ -102,7 +106,7 @@ public class MutationOps extends TableFluentExtension {
 	 * @param columnExpression Column Expression.
 	 * @return Fluent interface to set the value and timestamp.
 	 */
-	public ValueOps<MutationOps> put(String rowKey, String columnExpression){
+	public ValueMutationOps<MutationOps> put(String rowKey, String columnExpression){
 		
 		return put(rowKey, new ColumnIdentifiers(columnExpression));
 	}
@@ -113,15 +117,15 @@ public class MutationOps extends TableFluentExtension {
 	 * @param columnIdentifiers Column Identifiers
 	 * @return Fluent interface for setting the value and timestamp.
 	 */
-	ValueOps<MutationOps> put(String rowKey, ColumnIdentifiers columnIdentifiers) {
+	ValueMutationOps<MutationOps> put(String rowKey, ColumnIdentifiers columnIdentifiers) {
 		
 		Mutation mutation = new Mutation(rowKey);
 		
-		return new ValueOps<MutationOps>(columnIdentifiers, mutation, this, new CompletionHandler(){
+		return new ValueMutationOps<MutationOps>(columnIdentifiers, mutation, this, new CompletionHandler(){
 			@Override
 			public void complete(Mutation mutation)  throws MutationsRejectedException {
 				
-				writer.addMutation(mutation);
+				queueMutations(mutation);
 			}
 		});
 	}
@@ -171,6 +175,50 @@ public class MutationOps extends TableFluentExtension {
 	void queueMutations(Mutation... mutations) throws MutationsRejectedException{
 		
 		writer.addMutations(Arrays.asList(mutations));
+		
+		writer.flush();
+	}
+	
+	
+	/**
+	 * Shutdown the writer and return back to the Cirrus interface.
+	 */
+	@Override
+	public Cirrus and() {
+
+		close();
+		
+		return super.and();
+	}
+	
+	/**
+	 * Shutdown the writer and return back to the Cirrus interface.
+	 */
+	@Override
+	public Cirrus done() {
+		
+		logger.info("Done!");
+		
+		close();
+		
+		return super.done();
+	}
+
+	/**
+	 * Close the writer.
+	 */
+	void close(){
+		
+		logger.info("Closing writer for {}", writer);
+		
+		try {
+			
+			writer.close();
+			
+		} catch (MutationsRejectedException e) {
+			
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -179,22 +227,12 @@ public class MutationOps extends TableFluentExtension {
 	 */
 	void registerShutdownHook(){
 		
-		Runtime.getRuntime().addShutdownHook(new Thread(){
-			
+		logger.info("Shutdown hook registered");
+		
+		Runtime.getRuntime().addShutdownHook(
+		new Thread(){
 			@Override
-			public void run(){
-				
-				System.out.println("Closing the writer.");
-				
-				try {
-					
-					writer.close();
-					
-				} catch (MutationsRejectedException e) {
-					
-					e.printStackTrace();
-				}
-			}
+			public void run(){ close(); }
 		});
 	}
 }

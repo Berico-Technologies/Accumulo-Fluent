@@ -2,12 +2,18 @@ package com.berico.accumulo;
 
 import java.math.BigInteger;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
+import javax.activation.UnsupportedDataTypeException;
+
 import org.apache.accumulo.typo.encoders.BigIntegerLexicoder;
+import org.apache.accumulo.typo.encoders.BytesLexicoder;
 import org.apache.accumulo.typo.encoders.DateLexicoder;
 import org.apache.accumulo.typo.encoders.DoubleLexicoder;
 import org.apache.accumulo.typo.encoders.IntegerLexicoder;
+import org.apache.accumulo.typo.encoders.Lexicoder;
 import org.apache.accumulo.typo.encoders.LongLexicoder;
 import org.apache.accumulo.typo.encoders.StringLexicoder;
 import org.apache.accumulo.typo.encoders.UUIDLexicoder;
@@ -32,6 +38,49 @@ public class ConversionUtils {
 	static BigIntegerLexicoder bigintLex = new BigIntegerLexicoder();
 	static DateLexicoder dateLex = new DateLexicoder();
 	static UUIDLexicoder uuidLex = new UUIDLexicoder();
+	static BytesLexicoder bytesLex = new BytesLexicoder();
+	
+	/**
+	 * Registry of Lexicoders, index by the class type the support.
+	 */
+	static Map<Class<?>, Lexicoder<?>> lexicoderRegistry = new HashMap<Class<?>, Lexicoder<?>>();
+	
+	/**
+	 * Initialize the registry.
+	 */
+	static {
+		
+		lexicoderRegistry.put(Integer.class, intLex);
+		lexicoderRegistry.put(Double.class, doubleLex);
+		lexicoderRegistry.put(Long.class, longLex);
+		lexicoderRegistry.put(String.class, stringLex);
+		lexicoderRegistry.put(BigInteger.class, bigintLex);
+		lexicoderRegistry.put(Date.class, dateLex);
+		lexicoderRegistry.put(UUID.class, uuidLex);
+		lexicoderRegistry.put(byte[].class, bytesLex);
+		
+	}
+	
+	/**
+	 * Generic facility for converting bytes to desired type via Lexicoder.
+	 * @param bytes Bytes to decode.
+	 * @param clazz Desired class type.
+	 * @return instance of the desired type represented by the byte array.
+	 * @throws UnsupportedDataTypeException Thrown if there is not a Lexicoder that
+	 * supports the submitted class type.
+	 */
+	public static <T> T convert(byte[] bytes, Class<T> clazz) throws UnsupportedDataTypeException {
+		
+		if (!lexicoderRegistry.containsKey(clazz)){
+			throw new UnsupportedDataTypeException(
+				String.format("%s is not a supported conversion type.", clazz.getCanonicalName()));
+		}
+		
+		@SuppressWarnings("unchecked")
+		Lexicoder<T> lexicoder = (Lexicoder<T>) lexicoderRegistry.get(clazz);
+		
+		return lexicoder.decode(bytes);
+	}
 	
 	/**
 	 * Convert a BigInteger to a byte array.
@@ -196,4 +245,5 @@ public class ConversionUtils {
 		
 	    return longLex.decode(bytes);
 	}
+	
 }
